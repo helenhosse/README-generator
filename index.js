@@ -1,6 +1,6 @@
 const fs = require('fs');
 const inquirer = require('inquirer');
-const generateMarkdown = require('./utils/generateMarkdown');
+const generateMarkdown = require('../README-generator/utils/generateMarkdown');
 const util = require('util');
 
 function getLicense(value) {
@@ -27,14 +27,14 @@ const questions = [
         type: "input",
         name: "title of project",
         message: "What is the title of your project?",
-        validate: validateInput,
+        validate: "validateInput",
     },
 
     {
         type: "input",
         name: "description of project",
         message: "Describe your project.",
-        validate: validateInput,
+        validate: "validateInput",
     },
 
     {
@@ -48,7 +48,7 @@ const questions = [
         type:"input",
         name: "project use",
         message: "Describe how you are able to use your project",
-        validate: validateInput,
+        validate: "validateInput",
     },
 
     {
@@ -64,28 +64,28 @@ const questions = [
             "MIT",
             "Mozilla",
         ],
-        validate: validateInput,
+        validate: "validateInput",
     },
 
     {
         type: "input",
         name: "contributes of project",
         message: "Who contributed to this project? How can future users contribute?",
-        validate: validateInput,
+        validate: "validateInput",
     },
 
     {
         type: "input",
         name: "tests used for project",
         message: "Please verify any testing instructions needed for this project.",
-        validate: validateInput,
+        validate: "validateInput",
     },
 
     {
         type: "input",
         name: "username of github",
         message: "What is your github username?",
-        validate: validateInput,
+        validate: "validateInput",
     },
 
     {
@@ -102,25 +102,67 @@ const questions = [
     },
     
 ];
-
-function writeToFile(fileName, data) {
-    fs.writeFile(fileName, generateMarkdown(data), function (err) {
-        console.log(fileName)
-        console.log(data)
-        if (err) {
-            return console.log(err)
-        } else {
-            console.log("success!")
+function generatereadme(questions) {
+    return `
+    # ${questions.projectTitle}
+    
+    ## Description
+    ${questions.description}
+    ## Table of Contents:
+    * [Installing](#Installing)
+    * [Usage](#Usage)
+    * [License](#License)
+    * [Contributing](#Contributing)
+    * [Tests](#Tests)
+    * [Questions](#Questions)
+    
+    ### Installing
+    
+    ${questions.installation}
+        
+    ## Usage
+    
+    ${questions.usage}
+    
+    ## License
+    ${questions.license}
+    ${licenseDc}
+    ## Contributing
+    ${questions.contributing}
+    ## Tests
+    ${questions.test}
+    ## Questions
+    My GitHub profile can be viewed at https://github.com/${questions.gitHub}
+    You can contact me by email at ${questions.emailAddress}
+    `;
+  }
+  
+  // function to initialize program
+  function init() {
+      inquirer.prompt(questions)
+      .then(function(questions) {
+        switch (questions.license) {
+          case "MIT":
+            licenseDc = "[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)"
+            break;       
+          case 'Apache':
+            licenseDc = '[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)'
+            break;
+          case 'Creative Commons':
+            licenseDc = '[![License: CC0-1.0](https://licensebuttons.net/l/zero/1.0/80x15.png)](http://creativecommons.org/publicdomain/zero/1.0/)'
+            break;
         }
-    })
-}
-
-function init() {
-    inquirer.createPromptModule(questions).then((data) => {
-        console.log(JSON.stringify(data, null, ""));
-        data.getLicense = getLicense(data.license);
-        writeToFile("./example/README.md", data);
-    });
-}
-
-init();
+        const readme = generatereadme(questions)
+        
+        return writeFileAsync("readme.md", readme)
+      })
+      .then(function() {
+          console.log("Successfully generated Readme!")
+      })
+      .catch(function(err) {
+        console.log(err)
+      })
+  };
+  
+  // function call to initialize program
+  init();
